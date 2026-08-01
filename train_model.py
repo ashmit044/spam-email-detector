@@ -4,8 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score
 import joblib
-
-df=pd.read_csv("dataset/spam.csv",sep="\t",names=["label","message"])
+df = pd.read_csv("spam.csv", sep="\t", names=["label", "message"])
 df["label"]=df["label"].map({"ham":0,"spam":1})
 
 vectorizer=TfidfVectorizer(stop_words="english")
