@@ -1,20 +1,19 @@
 """Unit tests for Spam Email Detector."""
 
 import pytest
-import os
 import joblib
 from train_model import main as train_main
-from predict import classify_message
+from predict import MODEL_PATH, VECTORIZER_PATH, classify_message
 
 def test_model_training_and_prediction():
     # Execute training script to generate artifacts
     train_main()
 
-    assert os.path.exists("model.pkl")
-    assert os.path.exists("vectorizer.pkl")
+    assert MODEL_PATH.exists()
+    assert VECTORIZER_PATH.exists()
 
-    model = joblib.load("model.pkl")
-    vectorizer = joblib.load("vectorizer.pkl")
+    model = joblib.load(MODEL_PATH)
+    vectorizer = joblib.load(VECTORIZER_PATH)
 
     # Test obvious spam message
     spam_msg = "WINNER! You have won $1000 cash. Call 0800123456 now!"

@@ -1,12 +1,19 @@
 """CLI prediction script for Spam Email Detector."""
 
+from pathlib import Path
+
 import joblib
+
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "model.pkl"
+VECTORIZER_PATH = BASE_DIR / "vectorizer.pkl"
 
 def load_artifacts():
     """Load pre-trained model and vectorizer."""
     try:
-        model = joblib.load("model.pkl")
-        vectorizer = joblib.load("vectorizer.pkl")
+        model = joblib.load(MODEL_PATH)
+        vectorizer = joblib.load(VECTORIZER_PATH)
         return model, vectorizer
     except FileNotFoundError:
         print("Error: Model files not found! Please run 'python train_model.py' first.")

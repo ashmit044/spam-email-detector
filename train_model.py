@@ -4,6 +4,8 @@ This script reads spam.csv dataset, preprocesses text using TF-IDF,
 trains a classifier model, evaluates performance, and saves the trained artifacts.
 """
 
+from pathlib import Path
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,12 +13,18 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, classification_report
 import joblib
 
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_PATH = BASE_DIR / "spam.csv"
+MODEL_PATH = BASE_DIR / "model.pkl"
+VECTORIZER_PATH = BASE_DIR / "vectorizer.pkl"
+
 def main():
     print("--- Training Spam Detector Model ---")
 
     # 1. Load dataset (SMS / Email spam dataset)
     # The dataset uses tab-separated values with columns: label ('ham' or 'spam') and message text
-    df = pd.read_csv("spam.csv", sep="\t", names=["label", "message"])
+    df = pd.read_csv(DATA_PATH, sep="\t", names=["label", "message"])
     print(f"Loaded {len(df)} records from dataset.")
 
     # 2. Encode target labels: 0 for Ham (Legitimate), 1 for Spam
@@ -46,8 +54,8 @@ def main():
     print(classification_report(y_test, predictions, target_names=["Ham", "Spam"]))
 
     # 7. Save model and vectorizer to disk using joblib
-    joblib.dump(model, "model.pkl")
-    joblib.dump(vectorizer, "vectorizer.pkl")
+    joblib.dump(model, MODEL_PATH)
+    joblib.dump(vectorizer, VECTORIZER_PATH)
     print("Successfully saved 'model.pkl' and 'vectorizer.pkl'.")
 
 if __name__ == "__main__":
