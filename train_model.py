@@ -19,12 +19,20 @@ DATA_PATH = BASE_DIR / "spam.csv"
 MODEL_PATH = BASE_DIR / "model.pkl"
 VECTORIZER_PATH = BASE_DIR / "vectorizer.pkl"
 
-def main():
+def train_model(
+    data_path: Path = DATA_PATH,
+    model_path: Path = MODEL_PATH,
+    vectorizer_path: Path = VECTORIZER_PATH,
+):
+    """Train the classifier and write artifacts to the requested locations."""
+    data_path = Path(data_path)
+    model_path = Path(model_path)
+    vectorizer_path = Path(vectorizer_path)
     print("--- Training Spam Detector Model ---")
 
     # 1. Load dataset (SMS / Email spam dataset)
     # The dataset uses tab-separated values with columns: label ('ham' or 'spam') and message text
-    df = pd.read_csv(DATA_PATH, sep="\t", names=["label", "message"])
+    df = pd.read_csv(data_path, sep="\t", names=["label", "message"])
     print(f"Loaded {len(df)} records from dataset.")
 
     # 2. Encode target labels: 0 for Ham (Legitimate), 1 for Spam
@@ -54,9 +62,17 @@ def main():
     print(classification_report(y_test, predictions, target_names=["Ham", "Spam"]))
 
     # 7. Save model and vectorizer to disk using joblib
-    joblib.dump(model, MODEL_PATH)
-    joblib.dump(vectorizer, VECTORIZER_PATH)
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    vectorizer_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, model_path)
+    joblib.dump(vectorizer, vectorizer_path)
     print("Successfully saved 'model.pkl' and 'vectorizer.pkl'.")
+    return model, vectorizer
+
+
+def main():
+    """Train and save the production model artifacts beside this script."""
+    train_model()
 
 if __name__ == "__main__":
     main()

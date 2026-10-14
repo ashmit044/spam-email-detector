@@ -2,18 +2,19 @@
 
 import pytest
 import joblib
-from train_model import main as train_main
-from predict import MODEL_PATH, VECTORIZER_PATH, classify_message
+from train_model import train_model
+from predict import classify_message
 
-def test_model_training_and_prediction():
-    # Execute training script to generate artifacts
-    train_main()
+def test_model_training_and_prediction(tmp_path):
+    model_path = tmp_path / "model.pkl"
+    vectorizer_path = tmp_path / "vectorizer.pkl"
+    train_model(model_path=model_path, vectorizer_path=vectorizer_path)
 
-    assert MODEL_PATH.exists()
-    assert VECTORIZER_PATH.exists()
+    assert model_path.exists()
+    assert vectorizer_path.exists()
 
-    model = joblib.load(MODEL_PATH)
-    vectorizer = joblib.load(VECTORIZER_PATH)
+    model = joblib.load(model_path)
+    vectorizer = joblib.load(vectorizer_path)
 
     # Test obvious spam message
     spam_msg = "WINNER! You have won $1000 cash. Call 0800123456 now!"
