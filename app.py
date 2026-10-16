@@ -2,7 +2,12 @@
 
 import streamlit as st
 import joblib
-import os
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "model.pkl"
+VECTORIZER_PATH = BASE_DIR / "vectorizer.pkl"
 
 st.set_page_config(
     page_title="Spam Email & Message Classifier",
@@ -13,10 +18,10 @@ st.set_page_config(
 @st.cache_resource
 def load_model():
     """Load model and vectorizer with caching for performance."""
-    if not os.path.exists("model.pkl") or not os.path.exists("vectorizer.pkl"):
+    if not MODEL_PATH.exists() or not VECTORIZER_PATH.exists():
         return None, None
-    model = joblib.load("model.pkl")
-    vectorizer = joblib.load("vectorizer.pkl")
+    model = joblib.load(MODEL_PATH)
+    vectorizer = joblib.load(VECTORIZER_PATH)
     return model, vectorizer
 
 def main():
