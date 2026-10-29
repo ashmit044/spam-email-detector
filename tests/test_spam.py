@@ -6,7 +6,22 @@ import app
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from train_model import train_model
-from predict import classify_message
+from predict import ModelArtifactsError, classify_message, load_artifacts
+
+
+def test_artifact_loader_reports_missing_files(tmp_path):
+    with pytest.raises(ModelArtifactsError, match="Run 'python train_model.py'"):
+        load_artifacts(tmp_path / "model.pkl", tmp_path / "vectorizer.pkl")
+
+
+def test_artifact_loader_reports_corrupt_files(tmp_path):
+    model_path = tmp_path / "model.pkl"
+    vectorizer_path = tmp_path / "vectorizer.pkl"
+    model_path.write_bytes(b"not a joblib artifact")
+    vectorizer_path.write_bytes(b"not a joblib artifact")
+
+    with pytest.raises(ModelArtifactsError, match="corrupt or incompatible"):
+        load_artifacts(model_path, vectorizer_path)
 
 def test_model_training_and_prediction(tmp_path):
     model_path = tmp_path / "model.pkl"

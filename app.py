@@ -1,8 +1,8 @@
 """Streamlit Web Dashboard for Spam Email Detector."""
 
 import streamlit as st
-import joblib
 from pathlib import Path
+from predict import ModelArtifactsError, load_artifacts
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -18,20 +18,16 @@ st.set_page_config(
 @st.cache_resource
 def load_model():
     """Load model and vectorizer with caching for performance."""
-    if not MODEL_PATH.exists() or not VECTORIZER_PATH.exists():
-        return None, None
-    model = joblib.load(MODEL_PATH)
-    vectorizer = joblib.load(VECTORIZER_PATH)
-    return model, vectorizer
+    return load_artifacts(MODEL_PATH, VECTORIZER_PATH)
 
 def main():
     st.title("📧 Spam Email & SMS Detector")
     st.write("A beginner machine learning app built with **Scikit-Learn** and **Streamlit** to detect spam messages using Naive Bayes classification.")
 
-    model, vectorizer = load_model()
-
-    if model is None or vectorizer is None:
-        st.warning("⚠️ Pre-trained model files not found. Please train the model first by running `python train_model.py` in your terminal.")
+    try:
+        model, vectorizer = load_model()
+    except ModelArtifactsError as error:
+        st.warning(f"⚠️ {error}")
         return
 
     st.markdown("---")

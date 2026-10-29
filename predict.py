@@ -9,15 +9,31 @@ BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "model.pkl"
 VECTORIZER_PATH = BASE_DIR / "vectorizer.pkl"
 
-def load_artifacts():
-    """Load pre-trained model and vectorizer."""
+
+class ModelArtifactsError(RuntimeError):
+    """Model artifacts are missing, corrupt, or incompatible with this runtime."""
+
+
+def load_artifacts(model_path=MODEL_PATH, vectorizer_path=VECTORIZER_PATH):
+    """Load model artifacts or raise an actionable error for the caller to show."""
+    missing = [
+        str(path)
+        for path in (model_path, vectorizer_path)
+        if not Path(path).is_file()
+    ]
+    if missing:
+        raise ModelArtifactsError(
+            "Model files not found: " + ", ".join(missing) + ". Run 'python train_model.py' first."
+        )
     try:
-        model = joblib.load(MODEL_PATH)
-        vectorizer = joblib.load(VECTORIZER_PATH)
+        model = joblib.load(model_path)
+        vectorizer = joblib.load(vectorizer_path)
         return model, vectorizer
-    except FileNotFoundError:
-        print("Error: Model files not found! Please run 'python train_model.py' first.")
-        exit(1)
+    except Exception as error:
+        raise ModelArtifactsError(
+            "Could not load the trained model files. They may be corrupt or "
+            "incompatible; run 'python train_model.py' to recreate them."
+        ) from error
 
 def classify_message(text: str, model, vectorizer):
     """Classify input text message as Spam or Ham."""
@@ -31,7 +47,11 @@ def classify_message(text: str, model, vectorizer):
 
 def main():
     print("--- 📧 Spam Email & SMS Classifier CLI ---")
-    model, vectorizer = load_artifacts()
+    try:
+        model, vectorizer = load_artifacts()
+    except ModelArtifactsError as error:
+        print(f"Error: {error}")
+        return 1
     print("Model loaded successfully. Type 'exit' or 'quit' to stop.\n")
 
     while True:
@@ -45,5 +65,7 @@ def main():
         label, confidence = classify_message(user_input, model, vectorizer)
         print(f"Result: [{label}] (Confidence: {confidence:.1f}%)\n")
 
+    return 0
+
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
