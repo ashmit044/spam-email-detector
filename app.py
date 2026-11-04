@@ -52,7 +52,7 @@ def main():
 
     user_text = st.text_area("Enter Message Text:", value=default_text, height=120, placeholder="Paste email or SMS content here...")
 
-    if st.button("Check Message", type="primary") or user_text:
+    if st.button("Check Message", type="primary"):
         if user_text.strip():
             features = vectorizer.transform([user_text])
             prediction = model.predict(features)[0]
