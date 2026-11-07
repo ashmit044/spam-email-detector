@@ -38,16 +38,16 @@ def train_model(
     # 2. Encode target labels: 0 for Ham (Legitimate), 1 for Spam
     df["label_num"] = df["label"].map({"ham": 0, "spam": 1})
 
-    # 3. Vectorize text messages using TF-IDF (Term Frequency - Inverse Document Frequency)
-    # TF-IDF converts raw text strings into numerical feature matrices based on word importance.
-    vectorizer = TfidfVectorizer(stop_words="english", max_features=3000)
-    X = vectorizer.fit_transform(df["message"])
     y = df["label_num"]
 
-    # 4. Split dataset into training set (80%) and test set (20%)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+    # Split raw messages before fitting TF-IDF, so evaluation data cannot
+    # influence the learned vocabulary or inverse document frequencies.
+    messages_train, messages_test, y_train, y_test = train_test_split(
+        df["message"], y, test_size=0.2, random_state=42, stratify=y
     )
+    evaluation_vectorizer = TfidfVectorizer(stop_words="english", max_features=3000)
+    X_train = evaluation_vectorizer.fit_transform(messages_train)
+    X_test = evaluation_vectorizer.transform(messages_test)
 
     # 5. Train Multinomial Naive Bayes classifier
     # Naive Bayes is a classic, effective probabilistic algorithm for text classification.
@@ -61,13 +61,20 @@ def train_model(
     print("Classification Report:")
     print(classification_report(y_test, predictions, target_names=["Ham", "Spam"]))
 
-    # 7. Save model and vectorizer to disk using joblib
+    # Refit production artifacts on the full dataset after measuring holdout
+    # performance so the deployed model uses every labeled example.
+    vectorizer = TfidfVectorizer(stop_words="english", max_features=3000)
+    X_all = vectorizer.fit_transform(df["message"])
+    production_model = MultinomialNB()
+    production_model.fit(X_all, y)
+
+    # 7. Save production model and vectorizer to disk using joblib
     model_path.parent.mkdir(parents=True, exist_ok=True)
     vectorizer_path.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(model, model_path)
+    joblib.dump(production_model, model_path)
     joblib.dump(vectorizer, vectorizer_path)
     print("Successfully saved 'model.pkl' and 'vectorizer.pkl'.")
-    return model, vectorizer
+    return production_model, vectorizer
 
 
 def main():
